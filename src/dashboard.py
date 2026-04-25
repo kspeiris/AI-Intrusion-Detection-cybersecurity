@@ -22,7 +22,7 @@ def inject_styles():
             color: #e6f1f5;
         }
         .block-container {
-            padding-top: 1.6rem;
+            padding-top: 3.4rem;
             padding-bottom: 2rem;
         }
         .hero-card, .panel-card {
@@ -78,9 +78,9 @@ def inject_styles():
         .stTabs [data-baseweb="tab-list"] {
             gap: 1.35rem;
             overflow-x: auto;
-            overflow-y: hidden;
+            overflow-y: visible;
             flex-wrap: nowrap;
-            padding: 0 0.35rem 0.25rem;
+            padding: 0.45rem 0.35rem 0.25rem;
             scrollbar-width: none;
         }
         .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
