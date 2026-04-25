@@ -1,5 +1,7 @@
 # 🛡️ AI Intrusion Detection System
 
+![AI Intrusion Detection Hero](Images/inshero.png)
+
 ## 📌 Overview
 
 This project uses the NSL-KDD dataset to train intrusion detection models and expose them through a small deployment stack.
@@ -136,7 +138,15 @@ The project includes two dashboards:
 - `src/dashboard.py` for packet telemetry, endpoints, and protocol analysis
 - `src/alert_dashboard.py` for alert overview, threat analysis, and model details
 
-If you want to add real dashboard screenshots later, a `docs/screenshots/` folder is a good place to keep them.
+#### Alert Dashboard Views
+
+| Executive Overview | Threat Analysis |
+| --- | --- |
+| ![Alert Dashboard Executive Overview](Images/ins1.png) | ![Alert Dashboard Threat Analysis](Images/ins2.png) |
+
+| Sources & Targets | Model Operations |
+| --- | --- |
+| ![Alert Dashboard Sources and Targets](Images/ins3.png) | ![Alert Dashboard Model Operations](Images/ins4.png) |
 
 ## 🚀 Getting Started
 
