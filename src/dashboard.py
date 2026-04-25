@@ -75,6 +75,39 @@ def inject_styles():
             padding-left: 0.85rem;
             margin-bottom: 0.85rem;
         }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 1.35rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            padding: 0 0.35rem 0.25rem;
+            scrollbar-width: none;
+        }
+        .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+            display: none;
+        }
+        .stTabs [data-baseweb="tab"] {
+            flex: 0 0 auto;
+            width: auto;
+            min-width: max-content;
+            height: auto;
+            padding: 0.8rem 0 0.95rem;
+            margin: 0;
+            background: transparent;
+        }
+        .stTabs [data-baseweb="tab"] p {
+            font-size: 1rem;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        @media (max-width: 900px) {
+            .stTabs [data-baseweb="tab-list"] {
+                gap: 0.9rem;
+            }
+            .stTabs [data-baseweb="tab"] p {
+                font-size: 0.92rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
