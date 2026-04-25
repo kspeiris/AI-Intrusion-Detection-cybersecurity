@@ -10,8 +10,8 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-import app  # noqa: E402
-from config import RAW_FEATURE_COUNT  # noqa: E402
+import app
+from config import RAW_FEATURE_COUNT
 
 
 class ApiTests(unittest.TestCase):

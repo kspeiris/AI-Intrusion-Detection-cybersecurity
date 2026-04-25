@@ -3,6 +3,8 @@ import logging
 import sys
 from datetime import datetime, timezone
 
+STANDARD_LOG_RECORD_FIELDS = set(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -12,9 +14,16 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
+        context = {
+            key: value
+            for key, value in record.__dict__.items()
+            if key not in STANDARD_LOG_RECORD_FIELDS and not key.startswith("_")
+        }
+        if context:
+            payload["context"] = context
         if record.exc_info:
             payload["exception"] = self.formatException(record.exc_info)
-        return json.dumps(payload, ensure_ascii=True)
+        return json.dumps(payload, ensure_ascii=True, default=str)
 
 
 def get_logger(name):

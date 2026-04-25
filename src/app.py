@@ -7,7 +7,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from config import MODEL_METADATA_PATH, RAW_FEATURE_COUNT, SCALER_PATH
+from config import (
+    MODEL_METADATA_PATH,
+    RAW_FEATURE_COUNT,
+    SCALER_PATH,
+    resolve_project_path,
+)
 from logging_utils import get_logger
 
 logger = get_logger("ids.api")
@@ -19,24 +24,50 @@ runtime_state = {
     "model": None,
     "scaler": None,
     "selector": None,
+    "model_name": None,
     "threshold": None,
 }
 
 
-def load_runtime_state():
-    with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as metadata_file:
-        metadata = json.load(metadata_file)
+def reset_runtime_state(error=None):
+    runtime_state.update(
+        {
+            "loaded": False,
+            "error": error,
+            "metadata": None,
+            "model": None,
+            "scaler": None,
+            "selector": None,
+            "model_name": None,
+            "threshold": None,
+        }
+    )
 
-    runtime_state["metadata"] = metadata
-    runtime_state["model"] = joblib.load(metadata["best_model_path"])
-    runtime_state["scaler"] = joblib.load(SCALER_PATH)
-    runtime_state["selector"] = joblib.load(metadata["best_selector_path"])
-    runtime_state["threshold"] = metadata["best_threshold"]
-    runtime_state["loaded"] = True
-    runtime_state["error"] = None
+
+def load_runtime_state():
+    try:
+        with open(resolve_project_path(MODEL_METADATA_PATH), "r", encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+
+        best_model_name = metadata["best_model_name"]
+        new_state = {
+            "loaded": True,
+            "error": None,
+            "metadata": metadata,
+            "model": joblib.load(resolve_project_path(metadata["best_model_path"])),
+            "scaler": joblib.load(resolve_project_path(SCALER_PATH)),
+            "selector": joblib.load(resolve_project_path(metadata["best_selector_path"])),
+            "model_name": best_model_name,
+            "threshold": metadata["best_threshold"],
+        }
+    except Exception as exc:
+        reset_runtime_state(str(exc))
+        raise
+
+    runtime_state.update(new_state)
     logger.info(
         "runtime artifacts loaded",
-        extra={"model_name": metadata.get("best_model_name"), "threshold": metadata.get("best_threshold")},
+        extra={"model_name": best_model_name, "threshold": metadata.get("best_threshold")},
     )
 
 
@@ -45,8 +76,7 @@ async def lifespan(app: FastAPI):
     try:
         load_runtime_state()
     except Exception as exc:
-        runtime_state["loaded"] = False
-        runtime_state["error"] = str(exc)
+        reset_runtime_state(str(exc))
         logger.exception("runtime startup failed")
     yield
 

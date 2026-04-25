@@ -210,7 +210,7 @@ def packet_insights(df):
     top_port = df["dst_port"].astype(int).value_counts().idxmax()
 
     st.markdown('<div class="panel-card">', unsafe_allow_html=True)
-    st.subheader("Operational Analysis")
+    st.subheader("Traffic Summary")
     st.markdown(
         f'<div class="insight-info"><strong>Traffic profile</strong><br>{dominant_protocol} leads the current stream at {dominant_share:.1f}% of captured packets.</div>',
         unsafe_allow_html=True,
@@ -240,9 +240,9 @@ def overview_tab(df):
         st.markdown(
             """
             <div class="hero-card">
-                <div class="hero-title">Network Telemetry Command Center</div>
+                <div class="hero-title">Network Telemetry</div>
                 <p class="hero-subtitle">
-                    Review packet health, endpoint concentration, and protocol behavior from a cleaner operational cockpit.
+                    Review packet activity, top endpoints, and protocol trends.
                 </p>
             </div>
             """,
@@ -482,7 +482,7 @@ def model_analysis_tab(comparison, tuning):
         st.subheader("Deployment Recommendation")
         st.markdown(
             f"""
-            <div class="insight-good"><strong>Champion model</strong><br>{leader['Model']} currently leads with F1 {leader['F1 Score']:.3f} and recall {leader['Recall']:.3f}.</div>
+            <div class="insight-good"><strong>Best model</strong><br>{leader['Model']} currently leads with F1 {leader['F1 Score']:.3f} and recall {leader['Recall']:.3f}.</div>
             <div class="insight-info"><strong>Threshold</strong><br>Operational threshold is {leader['Threshold']:.2f}, tuned for IDS-style recall sensitivity.</div>
             <div class="insight-warn"><strong>Operator note</strong><br>Monitor recall and F1 first. Missed attacks are more costly than isolated false positives.</div>
             """,

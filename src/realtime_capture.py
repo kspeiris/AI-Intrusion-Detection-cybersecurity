@@ -3,10 +3,11 @@ import os
 import time
 
 from scapy.all import ICMP, IP, TCP, UDP, sniff
+from config import resolve_project_path
 
 OUTPUT_FILE = "reports/live_packets.csv"
 
-os.makedirs("reports", exist_ok=True)
+os.makedirs(resolve_project_path("reports"), exist_ok=True)
 
 CSV_COLUMNS = [
     "timestamp",
@@ -65,9 +66,10 @@ def packet_to_features(packet):
 
 
 def save_packet(row):
-    file_exists = os.path.exists(OUTPUT_FILE)
+    output_path = resolve_project_path(OUTPUT_FILE)
+    file_exists = os.path.exists(output_path)
 
-    with open(OUTPUT_FILE, "a", newline="", encoding="utf-8") as file:
+    with open(output_path, "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         if not file_exists:
@@ -89,11 +91,22 @@ def process_packet(packet):
 def start_capture():
     print("Starting real-time packet capture...")
     print("Press CTRL + C to stop.")
-
-    sniff(
-        prn=process_packet,
-        store=False,
-    )
+    try:
+        sniff(
+            prn=process_packet,
+            store=False,
+        )
+    except RuntimeError as exc:
+        message = str(exc).lower()
+        if "winpcap is not installed" in message or "not available at layer 2" in message:
+            print("Npcap/WinPcap-compatible packet capture is not installed or not available.")
+            print("Install Npcap with WinPcap compatibility, then rerun as Administrator.")
+            return
+        raise
+    except PermissionError:
+        print("Packet capture permission denied. Run the terminal as Administrator.")
+    except OSError as exc:
+        print(f"Packet capture failed: {exc}")
 
 
 if __name__ == "__main__":

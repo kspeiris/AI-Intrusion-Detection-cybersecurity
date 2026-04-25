@@ -9,7 +9,13 @@ import joblib
 import pandas as pd
 from scapy.all import ICMP, IP, TCP, UDP, sniff
 
-from config import COLUMNS, ENCODERS_PATH, MODEL_METADATA_PATH, SCALER_PATH
+from config import (
+    COLUMNS,
+    ENCODERS_PATH,
+    MODEL_METADATA_PATH,
+    SCALER_PATH,
+    resolve_project_path,
+)
 from logging_utils import get_logger
 
 OUTPUT_FILE = "reports/live_detection.csv"
@@ -20,7 +26,7 @@ DEMO_SLEEP_SECONDS = 1.0
 
 logger = get_logger("ids.detector")
 
-os.makedirs("reports", exist_ok=True)
+os.makedirs(resolve_project_path("reports"), exist_ok=True)
 
 detector_state = {
     "loaded": False,
@@ -29,6 +35,7 @@ detector_state = {
     "scaler": None,
     "selector": None,
     "encoders": None,
+    "model_name": None,
     "threshold": None,
 }
 
@@ -101,21 +108,50 @@ def safe_encode(value, encoder):
     return encoder.transform([value])[0]
 
 
-def load_detector_artifacts():
-    with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as metadata_file:
-        metadata = json.load(metadata_file)
+def reset_detector_state(error=None):
+    detector_state.update(
+        {
+            "loaded": False,
+            "error": error,
+            "model": None,
+            "scaler": None,
+            "selector": None,
+            "encoders": None,
+            "model_name": None,
+            "threshold": None,
+        }
+    )
 
-    rf_metadata = metadata["models"]["Random Forest"]
-    detector_state["model"] = joblib.load(rf_metadata["model_path"])
-    detector_state["scaler"] = joblib.load(SCALER_PATH)
-    detector_state["selector"] = joblib.load(rf_metadata["selector_path"])
-    detector_state["encoders"] = joblib.load(ENCODERS_PATH)
-    detector_state["threshold"] = rf_metadata["threshold"]
-    detector_state["loaded"] = True
-    detector_state["error"] = None
+
+def load_detector_artifacts():
+    try:
+        with open(resolve_project_path(MODEL_METADATA_PATH), "r", encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+
+        model_name = metadata["best_model_name"]
+        model_metadata = metadata["models"][model_name]
+        new_state = {
+            "loaded": True,
+            "error": None,
+            "model": joblib.load(resolve_project_path(model_metadata["model_path"])),
+            "scaler": joblib.load(resolve_project_path(SCALER_PATH)),
+            "selector": joblib.load(resolve_project_path(model_metadata["selector_path"])),
+            "encoders": joblib.load(resolve_project_path(ENCODERS_PATH)),
+            "model_name": model_name,
+            "threshold": model_metadata["threshold"],
+        }
+    except Exception as exc:
+        reset_detector_state(str(exc))
+        raise
+
+    detector_state.update(new_state)
     logger.info(
         "detector artifacts loaded",
-        extra={"threshold": detector_state["threshold"], "model_path": rf_metadata["model_path"]},
+        extra={
+            "model_name": detector_state["model_name"],
+            "threshold": detector_state["threshold"],
+            "model_path": model_metadata["model_path"],
+        },
     )
 
 
@@ -263,9 +299,10 @@ def extract_nsl_features(packet):
 
 
 def save_detection(row):
-    file_exists = os.path.exists(OUTPUT_FILE)
+    output_path = resolve_project_path(OUTPUT_FILE)
+    file_exists = os.path.exists(output_path)
 
-    with open(OUTPUT_FILE, "a", newline="", encoding="utf-8") as file:
+    with open(output_path, "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
 
         if not file_exists:
@@ -394,12 +431,13 @@ def start_detection():
     try:
         load_detector_artifacts()
     except Exception as exc:
-        detector_state["loaded"] = False
-        detector_state["error"] = str(exc)
+        reset_detector_state(str(exc))
         logger.exception(f"Failed to load detector artifacts: {exc}")
         return
 
-    logger.info(f"Using Random Forest with threshold {detector_state['threshold']}")
+    logger.info(
+        f"Using {detector_state['model_name']} with threshold {detector_state['threshold']}"
+    )
     logger.info("Press CTRL + C to stop.")
     try:
         sniff(

@@ -3,11 +3,17 @@ import joblib
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from config import COLUMNS, CATEGORICAL_COLUMNS
+from config import (
+    CATEGORICAL_COLUMNS,
+    COLUMNS,
+    ENCODERS_PATH,
+    SCALER_PATH,
+    resolve_project_path,
+)
 
 
 def load_data(path):
-    df = pd.read_csv(path, names=COLUMNS)
+    df = pd.read_csv(resolve_project_path(path), names=COLUMNS)
     df = df.drop("difficulty", axis=1)
     return df
 
@@ -77,5 +83,5 @@ def scale_features(X_train, X_test):
 
 
 def save_preprocessors(scaler, encoders):
-    joblib.dump(scaler, "models/scaler.pkl")
-    joblib.dump(encoders, "models/encoders.pkl")
+    joblib.dump(scaler, resolve_project_path(SCALER_PATH))
+    joblib.dump(encoders, resolve_project_path(ENCODERS_PATH))

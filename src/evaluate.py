@@ -3,7 +3,13 @@ import json
 import joblib
 from sklearn.metrics import classification_report, confusion_matrix
 
-from config import MODEL_METADATA_PATH, SCALER_PATH, TEST_PATH, TRAIN_PATH
+from config import (
+    MODEL_METADATA_PATH,
+    SCALER_PATH,
+    TEST_PATH,
+    TRAIN_PATH,
+    resolve_project_path,
+)
 from preprocess import prepare_feature_data
 
 
@@ -13,12 +19,12 @@ def main():
         TEST_PATH
     )
 
-    with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as metadata_file:
+    with open(resolve_project_path(MODEL_METADATA_PATH), "r", encoding="utf-8") as metadata_file:
         metadata = json.load(metadata_file)
 
-    scaler = joblib.load(SCALER_PATH)
-    selector = joblib.load(metadata["best_selector_path"])
-    model = joblib.load(metadata["best_model_path"])
+    scaler = joblib.load(resolve_project_path(SCALER_PATH))
+    selector = joblib.load(resolve_project_path(metadata["best_selector_path"]))
+    model = joblib.load(resolve_project_path(metadata["best_model_path"]))
     threshold = metadata["best_threshold"]
 
     x_test = scaler.transform(x_test)

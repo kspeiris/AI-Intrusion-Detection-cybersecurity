@@ -1,3 +1,16 @@
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def resolve_project_path(path):
+    path_obj = Path(path)
+    if path_obj.is_absolute():
+        return str(path_obj)
+    return str(PROJECT_ROOT / path_obj)
+
+
 COLUMNS = [
     "duration", "protocol_type", "service", "flag", "src_bytes", "dst_bytes",
     "land", "wrong_fragment", "urgent", "hot", "num_failed_logins",

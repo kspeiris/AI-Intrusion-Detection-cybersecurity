@@ -26,6 +26,7 @@ from config import (
     TRAIN_PATH,
     TUNING_RESULTS_PATH,
     XGBOOST_MODEL_PATH,
+    resolve_project_path,
 )
 from preprocess import prepare_feature_data, save_preprocessors, scale_features
 from visualize import (
@@ -241,8 +242,8 @@ def selector_path_for(model_name):
 
 
 def main():
-    os.makedirs(MODEL_DIR, exist_ok=True)
-    os.makedirs(REPORT_DIR, exist_ok=True)
+    os.makedirs(resolve_project_path(MODEL_DIR), exist_ok=True)
+    os.makedirs(resolve_project_path(REPORT_DIR), exist_ok=True)
 
     x_train_raw, x_test_raw, y_train, y_test, encoders = prepare_feature_data(
         TRAIN_PATH,
@@ -324,7 +325,7 @@ def main():
         by=["F1 Score", "Recall", "Precision", "Accuracy"],
         ascending=False,
     )
-    tuning_results.to_csv(TUNING_RESULTS_PATH, index=False)
+    tuning_results.to_csv(resolve_project_path(TUNING_RESULTS_PATH), index=False)
     print(f"Tuning summary saved to {TUNING_RESULTS_PATH}")
 
     best_cv_config = rf_best
@@ -334,8 +335,8 @@ def main():
 
     x_train_scaled, x_test, scaler = scale_features(x_train_raw, x_test_raw)
     save_preprocessors(scaler, encoders)
-    joblib.dump(encoders, ENCODERS_PATH)
-    joblib.dump(scaler, SCALER_PATH)
+    joblib.dump(encoders, resolve_project_path(ENCODERS_PATH))
+    joblib.dump(scaler, resolve_project_path(SCALER_PATH))
 
     final_configs = [
         (rf_best, make_random_forest, RANDOM_FOREST_MODEL_PATH),
@@ -370,8 +371,8 @@ def main():
         final_results.append(results)
 
         selector_path = selector_path_for(config["model_name"])
-        joblib.dump(model, model_path)
-        joblib.dump(selector, selector_path)
+        joblib.dump(model, resolve_project_path(model_path))
+        joblib.dump(selector, resolve_project_path(selector_path))
 
         final_metadata[config["model_name"]] = {
             "model_path": model_path,
@@ -399,37 +400,43 @@ def main():
             y_test,
             predictions,
             f"{config['model_name']} Confusion Matrix",
-            os.path.join(REPORT_DIR, f"{safe_name}_confusion_matrix.png"),
+            resolve_project_path(os.path.join(REPORT_DIR, f"{safe_name}_confusion_matrix.png")),
         )
         plot_roc(
             y_test,
             probabilities,
             f"{config['model_name']} ROC Curve",
-            os.path.join(REPORT_DIR, f"{safe_name}_roc_curve.png"),
+            resolve_project_path(os.path.join(REPORT_DIR, f"{safe_name}_roc_curve.png")),
         )
         if hasattr(model, "feature_importances_"):
             plot_feature_importance(
                 model,
                 selected_feature_names,
-                os.path.join(REPORT_DIR, f"{safe_name}_feature_importance.png"),
+                resolve_project_path(os.path.join(REPORT_DIR, f"{safe_name}_feature_importance.png")),
             )
 
     comparison = pd.DataFrame(final_results).sort_values(
         by=["F1 Score", "Recall", "Precision", "Accuracy"],
         ascending=False,
     )
-    comparison.to_csv(os.path.join(REPORT_DIR, "model_comparison.csv"), index=False)
+    comparison.to_csv(
+        resolve_project_path(os.path.join(REPORT_DIR, "model_comparison.csv")),
+        index=False,
+    )
     plot_model_comparison(
         comparison,
-        os.path.join(REPORT_DIR, "model_comparison_bar_chart.png"),
+        resolve_project_path(os.path.join(REPORT_DIR, "model_comparison_bar_chart.png")),
     )
 
     production_model_info = final_metadata[best_cv_config["model_name"]]
     pd.Series(production_model_info["selected_features"], name="selected_feature").to_csv(
-        os.path.join(REPORT_DIR, "selected_features.csv"),
+        resolve_project_path(os.path.join(REPORT_DIR, "selected_features.csv")),
         index=False,
     )
-    joblib.dump(joblib.load(production_model_info["selector_path"]), FEATURE_SELECTOR_PATH)
+    joblib.dump(
+        joblib.load(resolve_project_path(production_model_info["selector_path"])),
+        resolve_project_path(FEATURE_SELECTOR_PATH),
+    )
 
     metadata = {
         "best_model_name": best_cv_config["model_name"],
@@ -439,7 +446,7 @@ def main():
         "selection_basis": "cross_validated_f1",
         "models": final_metadata,
     }
-    with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as metadata_file:
+    with open(resolve_project_path(MODEL_METADATA_PATH), "w", encoding="utf-8") as metadata_file:
         json.dump(metadata, metadata_file, indent=2)
 
     print("\nBest production model selected from cross-validation:")

@@ -222,9 +222,9 @@ def hero(metadata, attacks, total):
         st.markdown(
             """
             <div class="hero-card">
-                <div class="hero-title">Threat Monitoring and Alert Operations</div>
+                <div class="hero-title">Alert Monitoring</div>
                 <p class="hero-subtitle">
-                    Review live model decisions, source concentration, and risk escalation patterns from a cleaner SOC-style view.
+                    Review live model results, suspicious sources, and risk trends.
                 </p>
             </div>
             """,
@@ -454,7 +454,7 @@ def model_tab(metadata, comparison):
         st.subheader("Deployed Model Profile")
         st.markdown(
             f"""
-            <div class="insight-ok"><strong>Champion model</strong><br>{model_name} is the deployed scoring engine.</div>
+            <div class="insight-ok"><strong>Active model</strong><br>{model_name} is the deployed scoring engine.</div>
             <div class="insight-watch"><strong>Selection basis</strong><br>{metadata.get('selection_basis', 'unknown')} with threshold {metadata['best_threshold']:.2f}.</div>
             <div class="insight-watch"><strong>Test F1</strong><br>{model_details['test_metrics']['F1 Score']:.3f} with recall {model_details['test_metrics']['Recall']:.3f}.</div>
             """,
@@ -519,12 +519,12 @@ def model_tab(metadata, comparison):
             color="Model",
             barmode="group",
             color_discrete_sequence=["#ef4444", "#f59e0b", "#22c55e"],
-            title="Production Candidate Comparison",
+            title="Model Comparison",
         )
         fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Selected Feature Footprint")
+    st.subheader("Selected Features")
     st.dataframe(
         pd.DataFrame({"selected_feature": model_details["selected_features"]}),
         use_container_width=True,
